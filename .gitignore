@@ -1,0 +1,8 @@
+Resources/
+Extras/
+*.pptx
+
+.rgignore
+.eslintrc
+.DS_Store
+
