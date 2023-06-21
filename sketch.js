@@ -17,7 +17,9 @@ function setup() {
     gallery.addVisual(new PayGapByJob2017());
     gallery.addVisual(new PayGapTimeSeries());
     gallery.addVisual(new ClimateChange());
-    gallery.addVisual(new NutrientsTimeSeries());
+    //gallery.addVisual(new NutrientsTimeSeries());
+    gallery.addVisual(new WaffleChart());
+    gallery.addVisual(new Food());
     
 }
 
@@ -25,9 +27,5 @@ function draw() {
     background(255);
     if (gallery.selectedVisual != null) {
         gallery.selectedVisual.draw();
-    }
-
-    if (gallery.selectedVisual == null) {
-        gallery.selectThis("nutrients-timeseries");
     }
 }

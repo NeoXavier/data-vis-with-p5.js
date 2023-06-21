@@ -104,7 +104,4 @@ function Gallery() {
     }
   };
 
-    this.selectThis = function(visId){
-        this.selectVisual(visId);
-    }
 }
