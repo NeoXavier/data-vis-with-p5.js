@@ -70,6 +70,7 @@ function WaffleChart() {
             return;
         }
         background(255);
+        ellipse(0,0, 10);
         for (var i = 0; i < this.waffles.length; i++) {
             var w = this.waffles[i];
             w.draw();

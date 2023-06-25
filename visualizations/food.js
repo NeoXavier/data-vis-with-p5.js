@@ -31,7 +31,7 @@ function Food(){
 
     this.destroy = function(){
         console.log("in destroy");
-        selct("#years").html("");
+        select("#years").html("");
     };
 
     this.draw = function(){

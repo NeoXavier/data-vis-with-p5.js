@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "baseUrl": ".",
+    "target": "es6"
+  },
+  "exclude": ["Extras/*", "Resources/*"]
+}

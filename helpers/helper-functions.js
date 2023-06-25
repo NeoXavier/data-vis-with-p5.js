@@ -63,6 +63,7 @@ function drawAxisLabels(xLabel, yLabel, layout) {
   fill(0);
   noStroke();
   textAlign('center', 'center');
+  textSize(15);
 
   // Draw x-axis label.
   text(xLabel,
