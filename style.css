@@ -21,3 +21,7 @@ body{
 .selected{
     background: gold
 }
+
+#ui *{
+    display: block;
+}

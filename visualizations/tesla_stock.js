@@ -1,6 +1,3 @@
-// TODO
-// Add date selector
-
 function TeslaStock() {
     this.name = "Tesla Stock";
 
@@ -48,33 +45,31 @@ function TeslaStock() {
     };
 
     this.setup = function() {
-        var startDate = '2019-06-01';
-        var endDate = '2019-12-31';
+        this.ui = createDiv().id('ui');
+        this.ui.parent('app');
 
+        var yearDiv = createDiv('Year:').parent('ui');
         let yearRange = this.getYearRange();
-        this.select = createSelect();
-        this.select.position(350, 30);
-        for(let i = 0; i < yearRange.length; i++) {
-            this.select.option(yearRange[i]);
+        this.yearSelect = createSelect().parent(yearDiv);
+        for (let i = 0; i < yearRange.length; i++) {
+            this.yearSelect.option(yearRange[i]);
         }
+        this.yearSelect.value(2018);
 
-        this.startMonthSlider = createSlider(1, 12, 01, 1);
-        this.startMonthSlider.position(400, 10);
-        this.endMonthSlider = createSlider(1, 12, 12, 1);
-        this.endMonthSlider.position(600, 10);
+        var startDiv = createDiv('From:').parent('ui');
+        this.startDateDisplay = createP().parent(startDiv);
+        this.startDaySlider = createSlider(1, 31, 1, 1).parent(startDiv);
+        this.startMonthSlider = createSlider(1, 12, 1, 1).parent(startDiv);
 
-        this.startDaySlider = createSlider(1, 31, 1, 1);
-        this.startDaySlider.position(400, 30);
-        this.endDaySlider = createSlider(1, 31, 31, 1);
-        this.endDaySlider.position(600, 30);
+        var endDiv = createDiv('To:').parent('ui');
+        this.endDateDisplay = createP().parent(endDiv);
+        this.endDaySlider = createSlider(1, 31, 31, 1).parent(endDiv);
+        this.endMonthSlider = createSlider(1, 12, 12, 1).parent(endDiv);
+        
+        this.startDate = new Date(this.yearSelect.value(), this.startMonthSlider.value() - 1, this.startDaySlider.value());
+        this.endDate = new Date(this.yearSelect.value(), this.endMonthSlider.value() - 1, this.endDaySlider.value());
 
-        this.generatePlotData(startDate, endDate);
-
-        this.minPrice = min(this.plotData.getColumn('Low')) - 1;
-        this.maxPrice = max(this.plotData.getColumn('High'));
-
-        this.minYear = this.plotData.getString(0, 'Date').split('-')[0];
-        this.maxYear = this.plotData.getString(this.plotData.getRowCount() - 1, 'Date').split('-')[0];
+        this.generatePlotData(this.startDate, this.endDate);
     };
 
     this.getYearRange = function() {
@@ -94,55 +89,16 @@ function TeslaStock() {
     this.generatePlotData = function(startDate, endDate) {
         this.plotData = new p5.Table();
 
-        // Date array format: [year, month, day]
-        startDateArray = startDate.split('-');
-        endDateArray = endDate.split('-');
-
         for (let i = 0; i < this.data.getRowCount(); i++) {
-            var date = this.data.getString(i, 'Date');
-            var dateArray = date.split('-');
-            if (dateArray[0] < startDateArray[0]) {
-                continue;
-            }
-            if (dateArray[0] > endDateArray[0]) {
-                break;
-            }
-            if (dateArray[0] >= startDateArray[0] && dateArray[0] <= endDateArray[0]) {
-                if (dateArray[0] == startDateArray[0] || dateArray[0] == endDateArray[0]) {
-                    if (dateArray[1] < startDateArray[1]) {
-                        continue;
-                    }
-                    if (dateArray[1] > endDateArray[1]) {
-                        break;
-                    }
-                    if (dateArray[1] >= startDateArray[1] && dateArray[1] <= endDateArray[1]) {
-                        if (dateArray[1] == startDateArray[1] || dateArray[1] == endDateArray[1]) {
-                            if (dateArray[2] < startDateArray[2]) {
-                                continue;
-                            }
-                            if (dateArray[2] > endDateArray[2]) {
-                                break;
-                            }
-                            if (dateArray[2] >= startDateArray[2] && dateArray[2] <= endDateArray[2]) {
-                                this.plotData.addRow(this.data.getRow(i));
-                                continue;
-                            }
-                        }
-                        else {
-                            this.plotData.addRow(this.data.getRow(i));
-                            continue;
-                        }
-                    }
-                    else {
-                        break;
-                    }
-                }
-                else {
-                    this.plotData.addRow(this.data.getRow(i));
-                    continue;
-                }
+            var date = new Date(this.data.getString(i, 'Date'));
+            if (date >= startDate && date <= endDate) {
+                this.plotData.addRow(this.data.getRow(i));
             }
         }
+
+        this.minPrice = min(this.plotData.getColumn('Low')) - 1;
+        this.maxPrice = max(this.plotData.getColumn('High'));
+
         this.numDataPoints = this.plotData.getRowCount();
     }
 
@@ -151,24 +107,51 @@ function TeslaStock() {
     this.yAxisLabel = 'Price';
 
     this.draw = function() {
+        // Check if data is loaded
         if (!this.loaded) {
             console.log('Data not yet loaded');
             return;
         }
 
+        // Prevent overlap of month and day sliders
+        if (this.startMonthSlider.value() >= this.endMonthSlider.value()) {
+            this.startMonthSlider.value(this.endMonthSlider.value() - 1);
+        }
+        if (this.startDaySlider.value() >= this.endDaySlider.value()) {
+            this.startDaySlider.value(this.endDaySlider.value() - 1);
+        }
+
+        // Update date displays
+        var currentStartDate = new Date(this.yearSelect.value(), this.startMonthSlider.value() - 1, this.startDaySlider.value());
+        var currentEndDate = new Date(this.yearSelect.value(), this.endMonthSlider.value() - 1, this.endDaySlider.value());
+
+        this.startDateDisplay.html(currentStartDate.toDateString().split(' ').slice(1).join(' '));
+        this.endDateDisplay.html(currentEndDate.toDateString().split(' ').slice(1).join(' '));
+
+        // Generate new plot data if date range has changed
+        if (currentStartDate != this.startDate || currentEndDate != this.endDate) {
+            this.generatePlotData(currentStartDate, currentEndDate);
+            this.startDate = currentStartDate;
+            this.endDate = currentEndDate;
+        }
+
+        // Draw plot elements
         this.drawTitle();
         drawAxis(this.layout);
         drawAxisLabels(this.xAxisLabel, this.yAxisLabel, this.layout);
-        drawYAxisTickLabels(this.minPrice, this.maxPrice, this.layout, this.mapPriceToHeight.bind(this), 2);
+        drawYAxisTickLabels(this.minPrice * 0.9, this.maxPrice * 1.1, this.layout, this.mapPriceToHeight.bind(this), 2);
+        this.drawLegend();
 
         // Check mouse above which data point, Returns the cooresponding data point
         var mouseDataPoint = this.checkMouse(mouseX, mouseY);
 
+        // Set width of candlestick points
         var rectWidth = floor(this.layout.plotWidth() / this.numDataPoints);
         if (rectWidth > 10) {
             rectWidth = 10;
         }
 
+        // Loop through data points and plot them
         for (var i = 0; i < this.plotData.getRowCount(); i++) {
 
             let open = round(this.plotData.getNum(i, 'Open'), 2);
@@ -176,21 +159,44 @@ function TeslaStock() {
             let low = round(this.plotData.getNum(i, 'Low'), 2);
             let high = round(this.plotData.getNum(i, 'High'), 2);
 
+            // Draw x-axis tick label
             if (i % ceil(this.numDataPoints / this.layout.numXTickLabels) == 0 || i == this.plotData.getRowCount() - 1) {
                 this.drawDateAxisLabel(i, this.plotData.getString(i, 'Date'));
             };
 
+            // Guide line for mouse hover
             if (mouseDataPoint == i) {
                 stroke(155);
                 line(this.mapDataPointToWidth(mouseDataPoint), this.layout.topMargin, this.mapDataPointToWidth(mouseDataPoint), this.layout.bottomMargin);
             }
-
+            
+            // Draw candlestick
             this.drawCandleStick(i, open, close, low, high, rectWidth);
         }
+        
+        // Show stock values on mouse hover
         if (mouseDataPoint != null) {
             this.drawStockValues(mouseDataPoint);
         }
     };
+
+    this.drawLegend = function() {
+        // Draw color squares to represent bullish and bearish
+        noStroke();
+        // Bullish
+        fill(237, 70, 75);
+        rect(width - 150, height - 10, 10, 10);
+        // Bearish
+        fill(152, 221, 50);
+        rect (width - 150, height - 25, 10, 10);
+
+        // Legend text
+        fill(0);
+        textSize(10);
+        textAlign('left', 'top');
+        text("Bullish", width - 130, height - 10);
+        text("Bearish", width - 130, height - 25);
+    }
 
     this.drawCandleStick = function(dataPoint, open, close, low, high, rectWidth) {
         stroke(0);
@@ -256,7 +262,7 @@ function TeslaStock() {
     };
 
     this.mapPriceToHeight = function(price) {
-        return map(price, this.minPrice, this.maxPrice, this.layout.bottomMargin - 10, this.layout.topMargin + 10);
+        return map(price, this.minPrice * 0.9, this.maxPrice * 1.1, this.layout.bottomMargin - 10, this.layout.topMargin + 10);
     }
 
     this.mapDataPointToWidth = function(i) {
@@ -285,7 +291,6 @@ function TeslaStock() {
         line(x, this.layout.bottomMargin, x, this.layout.bottomMargin + 5);
     }
 
-
     this.checkMouse = function(mouseX, mouseY) {
         var withinPlotX = mouseX > this.layout.leftMargin + 10 && mouseX < this.layout.rightMargin - 10;
         var withinPlotY = mouseY > this.layout.topMargin + 10 && mouseY < this.layout.bottomMargin - 10;
@@ -298,6 +303,7 @@ function TeslaStock() {
     }
 
     this.destroy = function() {
+        this.ui.remove();
     };
 
 }
