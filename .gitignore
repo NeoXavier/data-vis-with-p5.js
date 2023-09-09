@@ -1,7 +1,8 @@
 Resources/
 Extras/
-*.pptx
+planning/
 
+*.pptx
 .rgignore
 .eslintrc
 .DS_Store
