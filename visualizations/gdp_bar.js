@@ -8,7 +8,7 @@ function GDP() {
     // Public attributes
     this.countriesBarArr = [];
     this.barData;
-    this.first_position;
+    this.first_position = 1;
     this.last_position;
 
     // Private attributes
@@ -62,41 +62,57 @@ function GDP() {
         this.ui = createDiv().id('ui');
         this.ui.parent('app');
 
+        var title = createP().parent('ui').html("<b>Controls</b>");
+
         // Year slider
-        var yearDiv = createDiv().parent('ui');
+        var yearDiv = createDiv().parent('ui').html("Select Year:");
         let firstYear = years[0];
         let lastYear = years[years.length - 1];
         this.yearSlider = createSlider(firstYear, lastYear, firstYear, 1).parent(yearDiv);
-        this.yearDisplay = createDiv().parent(yearDiv).html(this.yearSlider.value());
         currentYear = this.yearSlider.value();
 
-        // Bar chart parameters (Showing top 10 countries, adjust accordingly);
-        this.first_position = 1;
-        this.last_position = 25;
+        // Number of bars selector
+
+        var numBarsDiv = createDiv().parent('ui').html("Select Number of Countries:");
+        this.numBarsSelector = createSelect().parent(numBarsDiv);
+        for(let i = 1; i<= 25; i++) {
+            this.numBarsSelector.option(i);
+        }
+        this.numBarsSelector.selected(10);
+        this.numBarsSelector.changed(this.change_num_bars.bind(this));
+
+        // Bar chart parameters (Showing top X number of countries countries, adjust accordingly);
+        this.last_position = this.numBarsSelector.value();
         ranking_y_positions = get_ranking_y_pos(this.first_position, this.last_position, this.layout);
 
         this.data_year_query(currentYear, this.first_position, this.last_position);
     };
-
+    
     this.destroy = function() {
         console.log("in destroy");
         this.ui.remove();
     };
+
+    this.change_num_bars= function() {
+        this.last_position = this.numBarsSelector.value();
+        ranking_y_positions = get_ranking_y_pos(this.first_position, this.last_position, this.layout);
+        this.data_year_query(currentYear, this.first_position, this.last_position);
+    }
 
     this.draw = function() {
         if (!this.loaded) {
             console.log("Data not yet loaded");
             return;
         }
-
+    
         // Update year if there is a change
         if (currentYear != this.yearSlider.value()) {
-            this.yearDisplay.html(this.yearSlider.value());
             this.data_year_query(this.yearSlider.value(), this.first_position, this.last_position);
             currentYear = this.yearSlider.value();
         }
 
         // Bar chart elements
+        drawTitle(this.last_position, currentYear, this.layout);
         drawAxis(this.layout);
         drawAxisLabels("GDP per Capita", "Ranking", this.layout);
         drawYAxisTickLables(ranking_y_positions, this.layout);
@@ -105,6 +121,17 @@ function GDP() {
             this.countriesBarArr[i].update();
             this.countriesBarArr[i].draw();
         }
+    };
+
+    function drawTitle(numOfCountries, year, layout) {
+        fill(0);
+        noStroke();
+        textSize(20);
+        textAlign('center', 'center');
+        
+        var title = "Top " + numOfCountries + " Countries with the Highest GDP per Capita in " + year;
+
+        text(title, (layout.plotWidth() / 2) + layout.leftMargin, layout.topMargin / 2);
     };
 
     function drawYAxisTickLables(ranking_positions, layout) {
@@ -151,11 +178,14 @@ function GDP() {
         maxGDP = this.barData[first_position][1];
 
         // Create a bar object for each of the top 10 countries and push it to an array
-        if (this.countriesBarArr.length == 0) {
+        // Or if number of bars has changed
+        if (this.countriesBarArr.length == 0 || this.countriesBarArr.length != last_position) {
+            var barArr = [];
             for (let i = first_position; i <= last_position; i++) {
                 let bar = new Bar(this.barData[i][0], this.barData[i][1], i, minGDP, maxGDP, this.layout, ranking_y_positions);
-                this.countriesBarArr.push(bar);
+                barArr.push(bar);
             }
+            this.countriesBarArr = barArr;
         }
         else {
             // newBarArray is the array for the new countriesBarArr
@@ -180,133 +210,3 @@ function GDP() {
     }
 }
 
-// min and max values of the overall dataset
-function Bar(_name, _gdp, _position, min, max, layout, y_positions) {
-    this.name = _name;
-    this.gdp = _gdp;
-    this.position = _position;
-    //this.color = get_color();
-    this.color = color(random(0, 200), random(155, 255), random(155, 255));
-
-    var layout = layout;
-    var y_positions = y_positions;
-    var plotWidth = layout.plotWidth();
-
-    var barHeight = get_bar_height(y_positions);
-    var targetBarWidth;
-    var currentBarWidth = 0;
-    var widthChangeDirection = 1;
-    var targetY;
-    var currentY = 0;
-    var yChangeDirection = 1;
-
-    this.draw = function() {
-        let x = layout.leftMargin + layout.pad;
-        fill(this.color);
-        rect(x, currentY, currentBarWidth, barHeight);
-        fill(50);
-        textAlign(RIGHT, CENTER);
-        text(this.name, x + currentBarWidth - 10, currentY + barHeight / 2);
-        textAlign(LEFT, CENTER);
-        text(round(this.gdp), x + currentBarWidth + 10, currentY + barHeight / 2);
-    }
-
-    this.update = function() {
-        if (currentBarWidth == 0) {
-            currentBarWidth = round(map(this.gdp, min * 0.9, max * 1.1, 100, plotWidth - layout.pad));
-            targetBarWidth = currentBarWidth;
-        }
-        if (currentY == 0) {
-            currentY = y_positions[this.position] - barHeight / 2;
-            targetY = currentY;
-        }
-
-        if (currentBarWidth != targetBarWidth) {
-            currentBarWidth += 5 * widthChangeDirection;
-            if (abs(currentBarWidth - targetBarWidth) < 5) {
-                currentBarWidth = targetBarWidth;
-            }
-        }
-        if (currentY != targetY) {
-            currentY += 2 * yChangeDirection;
-            if (abs(currentY - targetY) < 5) {
-                currentY = targetY;
-            }
-        }
-    }
-
-    this.changeBarParams = function(ranking, gdp, new_min, new_max, y_positions, layout) {
-        this.position = ranking;
-        this.gdp = gdp;
-        targetBarWidth = round(map(this.gdp, new_min * 0.9, new_max * 1.1, 100, plotWidth - layout.pad));
-        if (targetBarWidth >= currentBarWidth) {
-            widthChangeDirection = 1;
-        }
-        else {
-            widthChangeDirection = -1;
-        }
-        targetY = y_positions[this.position] - barHeight / 2;
-        if (targetY >= currentY) {
-            yChangeDirection = 1;
-        }
-        else {
-            yChangeDirection = -1;
-        }
-    }
-
-    function get_bar_height(y_positions) {
-        var barHeight;
-        var spacing = (y_positions[y_positions['last']] - y_positions[y_positions['first']]) / (y_positions['last'] - 1)
-
-        if (spacing < 25) {
-            var gap = 2.5;
-            barHeight = spacing - gap;
-        }
-        else if (spacing > 40) {
-            barHeight = 30;
-        }
-        else {
-            barHeight = 25;
-        }
-        return barHeight;
-    }
-
-    function get_color(){
-        const backgroundColors = [
-            [255, 0, 0],     // Red
-            [0, 255, 0],     // Green
-            [0, 0, 255],     // Blue
-            [255, 255, 0],   // Yellow
-            [255, 0, 255],   // Magenta
-            [0, 255, 255],   // Cyan
-            [128, 128, 128], // Gray
-            [255, 128, 0],   // Orange
-            [0, 128, 255],   // Light Blue
-            [128, 0, 0],     // Dark Red
-            [0, 128, 0],     // Dark Green
-            [0, 0, 128],     // Dark Blue
-            [128, 128, 0],   // Olive
-            [128, 0, 128],   // Purple
-            [0, 128, 128],   // Teal
-            [192, 192, 192], // Silver
-            [255, 165, 0],   // Gold
-            [139, 69, 19],   // Saddle Brown
-            [255, 69, 0],    // Red-Orange
-            [173, 216, 230], // Light Blue
-            [70, 130, 180],  // Steel Blue
-            [46, 139, 87],   // Sea Green
-            [255, 192, 203], // Pink
-            [255, 140, 0]    // Dark Orange
-        ];
-        var randomColor = random(backgroundColors);
-        return color(randomColor[0], randomColor[1], randomColor[2]);
-    }
-
-    // Checks if the mouse is hovering over the bar
-    // Input: x and y coordinates of the Bar object and the width and height of the bar
-    function checkMouseHover(x, y, width, height) {
-        if (mouseX > x && mouseX < x + width && mouseY > y && mouseY < y + height) {
-            return true;
-        }
-    }
-}

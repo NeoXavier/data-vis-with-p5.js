@@ -48,6 +48,8 @@ function TeslaStock() {
         this.ui = createDiv().id('ui');
         this.ui.parent('app');
 
+        var title = createP().parent('ui').html("<b>Controls</b>");
+
         var yearDiv = createDiv('Year:').parent('ui');
         let yearRange = this.getYearRange();
         this.yearSelect = createSelect().parent(yearDiv);
