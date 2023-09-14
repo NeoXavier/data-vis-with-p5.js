@@ -19,7 +19,7 @@ function setup() {
     gallery.addVisual(new ClimateChange());
     //gallery.addVisual(new NutrientsTimeSeries());
     //gallery.addVisual(new WaffleChart());
-    gallery.addVisual(new Food());
+    //gallery.addVisual(new Food());
     gallery.addVisual(new TeslaStock());
     gallery.addVisual(new GDP());
     

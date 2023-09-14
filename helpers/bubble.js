@@ -25,23 +25,27 @@ function Bubble(_name)
     {
         this.direction.set(0,0);
         
+        // Iterate over all bubbles
         for(var i = 0; i < _bubbles.length; i++)
         {
+            // If bubble is not the current bubble
             if(_bubbles[i].name != this.name)
             {
+                // Distance between bubles
                 var v = p5.Vector.sub(this.pos,_bubbles[i].pos); 
                 var d = v.mag();
 
+                // If bubbles overlap
                 if(d < this.size/2 + _bubbles[i].size/2)
                 {
                     if(d > 0)
                     {
-                        
                         this.direction.add(v)
                     }
+                    // Initial case of d = 0
                     else
                     {
-                        this.direction.add(p5.Vector.random2D());    
+                        this.direction.add(p5.Vector.random2D()); 
                          
                     }
                 }
@@ -51,7 +55,8 @@ function Bubble(_name)
         this.direction.normalize();
         this.direction.mult(2);
         this.pos.add(this.direction);
-        
+       
+        //Incrementally change the size of the bubble
         if(this.size < this.target_size)
         {
             this.size += 1;

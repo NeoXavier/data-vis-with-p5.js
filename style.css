@@ -12,6 +12,7 @@ body{
 
 .container {
   display: flex;
+  align-items: flex-start;
 }
 
 .hover {
@@ -20,6 +21,11 @@ body{
 
 .selected{
     background: gold
+}
+
+#ui {
+    background: #f5f6fc;
+     
 }
 
 #ui *{
