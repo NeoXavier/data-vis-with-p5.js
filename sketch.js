@@ -22,6 +22,7 @@ function setup() {
     //gallery.addVisual(new Food());
     gallery.addVisual(new TeslaStock());
     gallery.addVisual(new GDP());
+    gallery.addVisual(new Happiness());
     
 }
 

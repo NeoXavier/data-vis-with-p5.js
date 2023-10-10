@@ -39,9 +39,20 @@ function stringsToNumbers (array) {
   return array.map(Number);
 }
 
+function stringsToFloat(array){
+    return array.map(parseFloat);
+}
+
 // --------------------------------------------------------------------
 // Plotting helper functions
 // --------------------------------------------------------------------
+function drawTitle(title, layout) {
+    fill(0);
+    noStroke();
+    textSize(20);
+    textAlign('center', 'center');
+    text(title, (layout.plotWidth() / 2) + layout.leftMargin, layout.topMargin / 2);
+}
 
 function drawAxis(layout, colour=0) {
   stroke(color(colour));
@@ -80,31 +91,31 @@ function drawAxisLabels(xLabel, yLabel, layout) {
 }
 
 function drawYAxisTickLabels(min, max, layout, mapFunction,
-                             decimalPlaces) {
-  // Map function must be passed with .bind(this).
-  var range = max - min;
-  var yTickStep = range / layout.numYTickLabels;
+    decimalPlaces) {
+    // Map function must be passed with .bind(this).
+        var range = max - min;
+    var yTickStep = range / layout.numYTickLabels;
 
-  fill(0);
-  noStroke();
-  textAlign('right', 'center');
+    fill(0);
+    textAlign('right', 'center');
 
-  // Draw all axis tick labels and grid lines.
-  for (i = 0; i <= layout.numYTickLabels; i++) {
-    var value = min + (i * yTickStep);
-    var y = mapFunction(value);
+    // Draw all axis tick labels and grid lines.
+    for (i = 0; i <= layout.numYTickLabels; i++) {
+        var value = min + (i * yTickStep);
+        var y = mapFunction(value);
 
-    // Add tick label.
-    text(value.toFixed(decimalPlaces),
-         layout.leftMargin - layout.pad,
-         y);
+        // Add tick label.
+        noStroke();
+        text(value.toFixed(decimalPlaces),
+            layout.leftMargin - layout.pad,
+            y);
 
-    if (layout.grid) {
-      // Add grid line.
-      stroke(200);
-      line(layout.leftMargin, y, layout.rightMargin, y);
+        if (layout.grid) {
+            // Add grid line.
+                stroke(200);
+            line(layout.leftMargin, y, layout.rightMargin, y);
+        }
     }
-  }
 }
 
 function drawXAxisTickLabel(value, layout, mapFunction) {
